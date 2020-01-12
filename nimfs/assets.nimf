@@ -1,0 +1,586 @@
+#? stdtmpl | standard
+#
+#
+#proc genAssetData*(db: DbConn): string =
+#
+# let assetTypes = getAllRows(db, sql("SELECT id, name FROM asset_types;"))
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset">
+
+  <div class="settings links">
+
+    <h1>Your assets</h1>
+
+    <hr>
+
+    <div style="max-width: 250px; margin-left: auto; margin-right: auto;">
+      #for asset in assetTypes:
+      <div class="assetlink"><a href="/assetname/data/show?asset=${asset[0]}"  style="width: 100%; margin-bottom: 10px;" class="button is-link is-small">${asset[1]}</a></div>
+      #end if
+    </div>
+
+  </div>
+
+</div>
+#end proc
+#
+#
+#proc genAssetDataShow*(db: DbConn, assets: seq[Row], urlsort, assetType, buildingType, slevel, sroom, sactive, sreqname, sreqemail, sreqcompany, screator: string): string =
+# result = ""
+#
+#
+# var assetName: string
+# if assetType != "":
+#   assetName = getValue(db, sql("SELECT name FROM asset_types WHERE id = ?;"), assetType)
+# end if
+#
+#
+# let assetTypes = getAllRows(db, sql("SELECT id, name FROM asset_types;"))
+#
+# let buildingTypes = getAllRows(db, sql("SELECT DISTINCT building FROM asset_data;"))
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset" data-assetid="${assetType}" data-building="${buildingType}" data-level="${slevel}">
+
+  <div class="settings data">
+
+    <h1>Assets (total: ${assets.len})</h1>
+
+    # if assetType != "":
+      <h3><b>Asset:</b> ${assetName}</h3>
+    # end if
+    #
+    # if buildingType != "":
+      <h3><b>Building:</b> ${buildingType}</h3>
+    # end if
+
+    <hr>
+
+    <div class="assetlist all">
+
+      <div class="sorting">
+
+        <div class="sortheading">
+          Sort
+          <a href="/assetname/data/show" class="button is-info is-small" style="padding-top: 0.1rem;padding-bottom: 0.1rem;height: 17px;vertical-align: middle;margin-left: 10px;">Reset</a>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+
+          <div class="sortitem">
+            <label>Asset</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortAsset = urlsort.multiReplace([(re"asset=.*&", ""),(re"asset=.*", "")])
+                #
+                # if assetType == "":
+                  <option value="/assetname/data/show?${sortAsset}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortAsset}">All</option>
+                # end if
+
+                # for type in assetTypes:
+                #   var cssActive: string
+                #   if type[0] == assetType:
+                #     cssActive = " selected "
+                #   end if
+                #
+                    <option ${cssActive} value="/assetname/data/show?asset=${type[0]}&${sortAsset}"> ${type[1]}</option>
+                # end for
+              </select>
+            </div>
+          </div>
+
+          <div class="sortitem">
+            <label>Building</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortBuilding = urlsort.multiReplace([(re"building=.*&", ""),(re"building=.*", "")])
+                #
+                # if buildingType == "":
+                  <option value="/assetname/data/show?${sortBuilding}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortBuilding}">All</option>
+                # end if
+
+                # for item in buildingTypes:
+                #   var cssActive: string
+                #   if item[0] == buildingType:
+                #     cssActive = " selected "
+                #   end if
+                #
+                    <option ${cssActive} value="/assetname/data/show?building=${item[0]}&${sortBuilding}"> ${item[0]}</option>
+                # end for
+              </select>
+            </div>
+          </div>
+
+          # let levelTypes = getAllRows(db, sql("SELECT DISTINCT level FROM asset_data;"))
+          <div class="sortitem">
+            <label>Level</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortLevel = urlsort.multiReplace([(re"level=.*&", ""),(re"level=.*", "")])
+                #
+                # var levelFound: bool
+                # for item in levelTypes:
+                #   if item[0] == "":
+                #     continue
+                #   end if
+                #   var cssActive: string
+                #   if item[0] == slevel:
+                #     cssActive = " selected "
+                #     levelFound = true
+                #   end if
+                #
+                    <option ${cssActive} value="/assetname/data/show?level=${item[0]}&${sortLevel}"> ${item[0]}</option>
+                # end for
+                #
+                # if slevel == "" and not levelFound:
+                  <option value="/assetname/data/show?${sortLevel}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortLevel}">All</option>
+                # end if
+              </select>
+            </div>
+          </div>
+
+          # let roomTypes = getAllRows(db, sql("SELECT DISTINCT room FROM asset_data;"))
+          <div class="sortitem">
+            <label>Room</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortRoom = urlsort.multiReplace([(re"room=.*&", ""),(re"room=.*", "")])
+                #
+                # var roomFound: bool
+                # for item in roomTypes:
+                #   if item[0] == "":
+                #     continue
+                #   end if
+                #   var cssActive: string
+                #   if item[0] == sroom:
+                #     cssActive = " selected "
+                #     roomFound = true
+                #   end if
+                #
+                    <option ${cssActive} value="/assetname/data/show?room=${item[0]}&${sortRoom}"> ${item[0]}</option>
+                # end for
+                #
+                # if sroom == "" and not roomFound:
+                  <option value="/assetname/data/show?${sortRoom}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortRoom}">All</option>
+                # end if
+              </select>
+            </div>
+          </div>
+
+          <div class="sortitem">
+            <label>Status</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortActive = urlsort.multiReplace([(re"active=.*&", ""),(re"active=.*", "")])
+                #
+                # if sactive == "":
+                  <option value="/assetname/data/show?${sortActive}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortActive}">All</option>
+                # end if
+                #
+                # if sactive == "":
+                  <option value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
+                  <option value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                # elif sactive == "Reserved":
+                  <option selected value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
+                  <option value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                # else:
+                  <option value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
+                  <option selected value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                # end if
+                #
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <div>
+          # let reqnameTypes = getAllRows(db, sql("SELECT DISTINCT reqName FROM asset_data;"))
+          <div class="sortitem">
+            <label>Req. person</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortReqname = urlsort.multiReplace([(re"reqname=.*&", ""),(re"reqname=.*", "")])
+                #
+                # var reqnameFound: bool
+                # for item in reqnameTypes:
+                #   if item[0] == "":
+                #     continue
+                #   end if
+                #   var cssActive: string
+                #   if item[0] == sreqname:
+                #     cssActive = " selected "
+                #     reqnameFound = true
+                #   end if
+                #
+                    <option ${cssActive} value="/assetname/data/show?reqname=${item[0]}&${sortReqname}"> ${item[0]}</option>
+                # end for
+                #
+                # if sreqname == "" and not reqnameFound:
+                  <option value="/assetname/data/show?${sortReqname}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortReqname}">All</option>
+                # end if
+              </select>
+            </div>
+          </div>
+
+          # let reqcompanyTypes = getAllRows(db, sql("SELECT DISTINCT reqCompany FROM asset_data;"))
+          <div class="sortitem">
+            <label>Req. company</label>
+            <div class="select">
+              <select onchange="location = this.options[this.selectedIndex].value;"">
+                # let sortReqcompany = urlsort.multiReplace([(re"reqcompany=.*&", ""),(re"reqcompany=.*", "")])
+                #
+                # var reqcompanyFound: bool
+                # for item in reqcompanyTypes:
+                #   if item[0] == "":
+                #     continue
+                #   end if
+                #   var cssActive: string
+                #   if item[0] == sreqcompany:
+                #     cssActive = " selected "
+                #     reqcompanyFound = true
+                #   end if
+                #
+                    <option ${cssActive} value="/assetname/data/show?reqcompany=${item[0]}&${sortReqcompany}"> ${item[0]}</option>
+                # end for
+                #
+                # if sreqcompany == "" and not reqcompanyFound:
+                  <option value="/assetname/data/show?${sortReqcompany}" selected>All</option>
+                # else:
+                  <option value="/assetname/data/show?${sortReqcompany}">All</option>
+                # end if
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+
+
+
+      </div>
+
+      <hr>
+
+      <button id="newData" class="button is-success is-small" onclick="dataAdd();">Add new asset</button>
+      <button id="editSelected" class="button is-success is-small" onclick="dataEditSelected();">Edit selected assets</button>
+      <button class="button is-info is-small" onclick="assetCheckOn();">Select all</button>
+      <button class="button is-info is-small" onclick="assetCheckOff();">Deselect all</button>
+
+      <button id="exportSelected" class="button is-link is-small" onclick="assetExportXlsxSelected();" data-url="${urlsort}">Export selected to XLSX</button>
+      <a class="button is-link is-small" href="/assetname/data/show?export=sort&${urlsort}">Export sorting to XLSX</a>
+      <a class="button is-link is-small" href="/assetname/data/show?export=all&${urlsort}">Export all to XLSX</a>
+
+      <br>
+      <br>
+      <div id="assetlistoverflow">
+        <table class="table is-bordered is-hoverable assets">
+          <thead>
+            <tr>
+              <th class="id">ID</th>
+              <th class="tagnr">Tag nr.</th>
+              <th class="active">Active</th>
+              <th class="type">Type</th>
+              <th class="typeid" style="display: none;">Type ID</th>
+              <th class="typesub">Type sub</th>
+              <th class="building">Building</th>
+              <th class="levelid">Level</th>
+              <th class="idnr">ID nr</th>
+              <th class="room">Room</th>
+              <th class="coordinates">Coordinates</th>
+              <th class="description">Description</th>
+              <th class="modified">Modified</th>
+              <th class="reqname">Req. name</th>
+              <th class="reqemail">Req. email</th>
+              <th class="reqcompany">Req. company</th>
+              <th class="lastedit">Last edit</th>
+              <th class="project">Project</th>
+              <th class="projectid">Project ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            # for asset in assets:
+            #   var color: string
+            #   if asset[2] == "Reserved":
+            #     color = "yellow"
+            #   end if
+              <tr id="${asset[0]}" class="editData ${color}">
+                <td class="id has-text-centered">${asset[0]}</td>
+                #if asset[4] != "":
+                <td class="tagnr">
+                  <input id="check-${asset[0]}" type="checkbox" name="check-${asset[0]}" class="check" value="true" data-assetid="${asset[0]}"><label class="cb" for="check-${asset[0]}"></label>
+                  ${asset[1]}-${asset[5]}-${asset[6]}-${asset[7]}-${asset[4]}
+                </td>
+                #else:
+                <td class="tagnr">
+                  <input id="check-${asset[0]}" type="checkbox" name="check-${asset[0]}" class="check" value="true" data-assetid="${asset[0]}"><label class="cb" for="check-${asset[0]}"></label>
+                  ${asset[1]}-${asset[5]}-${asset[6]}-${asset[7]}
+                </td>
+                #end if
+                #if asset[2] == "Reserved":
+                <td class="has-text-centered active reserved">${asset[2]}</td>
+                #else:
+                <td class="has-text-centered active used">${asset[2]}</td>
+                #end if
+                <td class="has-text-centered type">${asset[1]}</td>
+                <td id="${asset[0]}-typeid" class="typeid" style="display: none;">${asset[3]}</td>
+                <td class="typesub">${asset[4]}</td>
+                <td class="building">${asset[5]}</td>
+                <td class="has-text-centered levelid">${asset[6]}</td>
+                <td class="has-text-centered idnr">${asset[7]}</td>
+                <td class="has-text-centered room">${asset[9]}</td>
+                <td class="coordinates">${asset[10]}</td>
+                <td class="description">${asset[11]}</td>
+                <td class="modified">${epochDate(asset[12], "YYYY-MM-DD HH:mm")}</td>
+                <td class="reqname">${asset[13]}</td>
+                <td class="reqemail">${asset[14]}</td>
+                <td class="reqcompany">${asset[15]}</td>
+                <td class="lastedit">
+                  # if asset[17] == "":
+                    ${asset[16]}
+                  # else:
+                    ${asset[17]}
+                  # end if
+                </td>
+                <td class="project">${asset[18]}</td>
+                <td class="projectid">${asset[19]}</td>
+              </tr>
+            #end for
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="info-modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div id="info-modal-content" class="box has-text-centered">
+
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<div id="dataModal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <div id="modal-card-head" class="modal-card-head">
+      <p id="product-title" class="modal-card-title">Asset data</p>
+      <button id="dataModalCloseCross" class="delete" aria-label="close"></button>
+    </div>
+    <section id="modal-card-body" class="modal-card-body scrollbar">
+
+      <form id="dataForm" method="POST" action="/assetname/data">
+
+        <div id="assetEditManyInfo" class="notification is-warning">
+        </div>
+
+        <div class="columns">
+          <div class="column">
+
+            <input id="id" name="id" style="display: none;">
+
+            <input id="idnrOriginal" name="idnrOriginal" style="display: none;">
+
+            <input id="urlsort" name="urlsort" style="display: none;" value="${urlsort}">
+
+            <div class="collection">
+              <h5>Required data</h5>
+
+              <div id="assetNumber">
+                <label>Number of assets to create <span class="warn ast">*</span></label>
+                <div class="field">
+                  <div class="control">
+                    <input type="number" id="number" name="number" min="1" class="input is-info" value="1">
+                  </div>
+                </div>
+              </div>
+
+              <br>
+              <label>Active <span class="warn ast">*</span></label>
+              <br>
+              <div id="activeSelect" class="select is-info item">
+                <select id="active" name="active">
+                  <option value="Reserved"> Reserved</option>
+                  <option value="Used"> Used</option>
+                </select>
+              </div>
+              <br>
+
+              <br>
+              <label>Asset type <span class="warn ast">*</span></label>
+              <br>
+              <div id="typeSelect" class="select is-info item">
+                <select id="type" name="type">
+                  #for type in assetTypes:
+                    <option value="${type[0]}"> ${type[1]}</option>
+                  #end for
+                </select>
+              </div>
+              <br>
+
+              <br>
+              <label>Building <span class="warn ast">*</span></label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="building" name="building" class="input is-info item" value="" required>
+                </div>
+              </div>
+
+              <label>Level <span class="warn ast">*</span></label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="levelid" name="level" class="input is-info item" value="" required>
+                </div>
+              </div>
+
+              <label>Type sub <span class="warn">(empty if there's no sub-type!)</span></label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="typesub" name="typesub" class="input is-info item" value="">
+                </div>
+              </div>
+
+            </div>
+
+            <div class="collection">
+              <h5>Optional data</h5>
+
+              <div id="customid">
+                <label id="idnrLabelAdd">ID nr <span class="warn">WARNING! Only expert users!<br>Double click to activate.</span></label>
+                <label id="idnrLabelUpdate">ID nr <br><span class="warn">WARNING! Only expert users!<br>Double click to activate.</span></label>
+                <div class="field">
+                  <div class="control" id="idnrActivate">
+                    <input type="number" id="idnr" name="idnr" class="input is-info item" value="" >
+                  </div>
+                </div>
+              </div>
+
+              <label>Room</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="room" name="room" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Coordinates</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="coordinates" name="coordinates" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Description</label>
+              <div class="field">
+                <div class="control">
+                  <textarea type="text" id="description" name="description" class="textarea is-info item"></textarea>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="column">
+
+            <div class="collection">
+              <h5>Tracking data</h5>
+
+              <label>Req. name</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="reqname" name="reqname" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Req. email</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="reqemail" name="reqemail" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Req. company</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="reqcompany" name="reqcompany" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Project</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="project" name="project" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Project ID</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="projectid" name="projectid" class="input is-info item" value="">
+                </div>
+              </div>
+
+            </div>
+
+            <div id="datefield">
+              <label>Date</label>
+              <div class="field">
+                <div class="control">
+                  <input disabled type="text" id="date" name="date" class="input is-info item" value="">
+                </div>
+              </div>
+            </div>
+
+            <div id="editedbyfield">
+              <label>Last edited by</label>
+              <div class="field">
+                <div class="control">
+                  <input disabled type="text" id="lastedit" name="lastedit" class="input is-info item" value="">
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <a id="deleteData" class="button is-danger" href="/assetname/data/delete?id=" style="width: 100%;">Delete</a>
+            </div>
+
+
+          </div>
+        </div>
+
+      </form>
+
+    </section>
+    <div class="modal-card-foot">
+      <button id="dataModalClose" class="button">Cancel</button>
+      <button type="button" class="button is-success" onclick="document.getElementById('dataForm').submit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<select id="typeRevert" name="type" style="display: none;">
+  #for type in assetTypes:
+    <option value="${type[1]}">${type[0]}</option>
+  #end for
+</select>
+#end proc

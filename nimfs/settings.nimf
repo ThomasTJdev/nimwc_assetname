@@ -1,0 +1,566 @@
+#? stdtmpl | standard
+#
+#
+#
+#
+#
+#proc genAsset*(db: DbConn): string =
+# result = ""
+
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset">
+
+  <div id="settings">
+    <h1>Asset settings</h1>
+
+    <div id="pluginDetails">
+      <hr>
+      <div> <b>Package:</b> ${assetN}</div>
+      <div> <b>Version:</b> ${assetV}</div>
+      <div> <b>Description:</b><br>${assetD}</div>
+      <div> <b>URL:</b> <a href="${assetU}">${assetU}</a></div>
+      <hr>
+    </div>
+
+  </div>
+
+
+</div>
+
+#end proc
+#
+#
+#
+#
+#
+#proc genAssetSettings*(db: DbConn): string =
+# result = ""
+#
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset">
+
+  <div id="settings">
+
+    <h1>Edit main settings</h1>
+
+    <div class="settings buttons">
+      <div>
+        <a class="button is-link" href="/assetname/settings/types">Edit asset types</a>
+      </div>
+      <br>
+      <div>
+        <a class="button is-link" href="/assetname/settings/documentation">Edit asset documentation</a>
+      </div>
+      <br>
+      <div>
+        <a class="button is-link" href="/assetname/settings/om">Edit asset O&M</a>
+      </div>
+      <br>
+      <div>
+        <a class="button is-link" href="/assetname/data">Asset data</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+#end proc
+#
+#
+#proc genAssetSettingsTypes*(db: DbConn): string =
+# result = ""
+#
+# let assets = getAllRows(db, sql("SELECT id, name, description FROM asset_types;"))
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset">
+
+  <div class="settings types">
+
+    <h1>Edit asset types</h1>
+
+    <br>
+
+    <p>There's a total of ${assets.len} assets in your system. There may only be 1 of each type.</p>
+
+    <div class="assetlist">
+
+      <button id="newAsset" class="button is-info is-small" onclick="assetAdd();">Add new asset</button>
+      <br>
+      <br>
+      <table class="table is-bordered is-hoverable assets">
+        <thead>
+          <tr>
+            <th class="id">ID</th>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          #for asset in assets:
+            <tr id="${asset[0]}" class="editAsset">
+              <td class="id">${asset[0]}</td>
+              <td class="name">${asset[1]}</td>
+              <td class="description">${asset[2]}</td>
+            </tr>
+          #end for
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="info-modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div id="info-modal-content" class="box has-text-centered">
+
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<div id="assetModal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width: 400px;">
+    <header id="modal-card-head" class="modal-card-head">
+      <p id="product-title" class="modal-card-title">Asset</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section id="modal-card-body" class="modal-card-body scrollbar">
+
+      <form id="assetForm" method="POST" action="/assetname/settings/types">
+
+        <input id="id" name="id" style="display: none;">
+
+        <label>Asset name</label>
+        <div class="field">
+          <div class="control">
+            <input type="text" id="assetName" name="name" class="input is-info" value="">
+          </div>
+        </div>
+
+        <label>Asset description</label>
+        <div class="field">
+          <div class="control">
+            <textarea type="text" id="assetDescription" name="description" class="textarea is-info"></textarea>
+          </div>
+        </div>
+
+        <br>
+      </form>
+
+    </section>
+    <footer class="modal-card-foot">
+      <button id="assetModalClose" class="button">Close</button>
+      <button type="button" class="button is-success" onclick="document.getElementById('assetForm').submit()">Save</button>
+    </footer>
+  </div>
+</div>
+#end proc
+#
+#
+#
+#
+#proc genAssetSettingsTypesChoose*(db: DbConn, page: string): string =
+# result = ""
+#
+# let assets = getAllRows(db, sql("SELECT id, name, description FROM asset_types;"))
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset">
+
+  <div class="settings types">
+
+    <h1>Edit ${page}</h1>
+
+    <br>
+
+    <p>Select the asset, where you want to edit ${page}.</p>
+
+    <div class="assetlist">
+
+      <table class="table is-bordered is-hoverable assets choose">
+        <thead>
+          <tr>
+            <td class="id">ID</td>
+            <td>Name</td>
+            <td>Description</td>
+          </tr>
+        </thead>
+        <tbody>
+          #for asset in assets:
+          #  if page == "documentation":
+            <tr id="${asset[0]}" onclick="document.location = '/assetname/settings/documentation/${asset[0]}';">
+          #  else:
+            <tr id="${asset[0]}" onclick="document.location = '/assetname/settings/om/${asset[0]}';">
+          #  end if
+              <td class="id">${asset[0]}</td>
+              <td class="name">${asset[1]}</td>
+              <td class="description">${asset[2]}</td>
+            </tr>
+          #end for
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+</div>
+#end proc
+#
+#
+#proc genAssetSettingsOm*(db: DbConn, assetID: string): string =
+# result = ""
+#
+# let assets = getAllRows(db, sql("SELECT id, description, details, interval FROM asset_om WHERE type = ?;"), assetID)
+#
+# let assetData = getRow(db, sql("SELECT id, name, description FROM asset_types WHERE id = ?;"), assetID)
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset" data-assetid="${assetID}">
+
+  <div class="settings om">
+
+    <h1>Edit asset O&M specifications for ${assetData[1]}</h1>
+
+    <br>
+
+    <p>There's a total of ${assets.len} O&M specifications for ${assetData[1]}.</p>
+
+    <div class="assetlist">
+
+      <button id="newOm" class="button is-info is-small" onclick="assetOmAdd();">Add new O&M task</button>
+
+      <br>
+      <br>
+
+      <table class="table is-bordered is-hoverable assets om">
+        <thead>
+          <tr>
+            <th class="id">ID</th>
+            <th>Description</th>
+            <th style="max-width: 65px;">Interval<br>(per x month)</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          #for asset in assets:
+            <tr id="${asset[0]}" class="editAssetOm">
+              <td class="id">${asset[0]}</td>
+              <td class="description">${asset[1]}</td>
+              <td class="interval">${asset[3]}</td>
+              <td class="details">${asset[2].replace("\n", "<br>")}</td>
+            </tr>
+          #end for
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="info-modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div id="info-modal-content" class="box has-text-centered">
+
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<div id="assetOmModal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width: 400px;">
+    <header id="modal-card-head" class="modal-card-head">
+      <p id="product-title" class="modal-card-title">Asset: ${assetData[1]}</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section id="modal-card-body" class="modal-card-body scrollbar">
+
+      <form id="assetOmForm" method="POST" action="/assetname/settings/types">
+
+        <input id="id" name="id" style="display: none;">
+        <input id="typeid" name="typeid" style="display: none;">
+
+        <label>Description</label>
+        <div class="field">
+          <div class="control">
+            <input type="text" id="assetOmDescription" name="description" class="input is-info" value="">
+          </div>
+        </div>
+
+        <label>Interval per month</label>
+        <div class="field">
+          <div class="control">
+            <input type="number" id="assetOmInterval" name="interval" class="input is-info" value="">
+          </div>
+        </div>
+
+        <label>Details</label>
+        <div class="field">
+          <div class="control">
+            <textarea type="text" id="assetOmDetails" name="details" class="textarea is-info"></textarea>
+          </div>
+        </div>
+
+        <br>
+      </form>
+
+    </section>
+    <footer class="modal-card-foot">
+      <button id="assetOmModalClose" class="button">Close</button>
+      <button type="button" class="button is-success" onclick="document.getElementById('assetOmForm').submit()">Save</button>
+    </footer>
+  </div>
+</div>
+#end proc
+#
+#
+#proc genAssetSettingsDocumentation*(db: DbConn, assetID: string): string =
+# result = ""
+#
+# let assets = getAllRows(db, sql("SELECT id, responsecode, filetype, viewtype, designation, runningid, fileext, description FROM asset_documentation WHERE type = ?;"), assetID)
+#
+# let assetData = getRow(db, sql("SELECT id, name, description, subname FROM asset_types WHERE id = ?;"), assetID)
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset" data-assetid="${assetID}">
+
+  <div class="settings documentation">
+
+    <h1>Edit asset documentations requirements for ${assetData[1]}</h1>
+
+    <br>
+
+    <p>There's a total of ${assets.len} documentation requirements for ${assetData[1]}.</p>
+
+    <div class="assetlist">
+
+      <button id="newDoc" class="button is-info is-small" onclick="assetDocAdd();">Add new documentation</button>
+
+      <br>
+      <br>
+
+      <table class="table is-bordered is-hoverable assets documentation">
+        <thead>
+          <tr>
+            <th class="id">ID</th>
+            <th>Ansvar</th>
+            <th>Filtype</th>
+            <th>Afbildning</th>
+            <th>Betegnelse</th>
+            <th>Løbenr</th>
+            <th>Fil</th>
+            <th>Beskrivelse</th>
+            <th>Filnavn</th>
+          </tr>
+        </thead>
+        <tbody>
+          #for asset in assets:
+            <tr id="${asset[0]}" class="editAssetDoc">
+              <td class="id">${asset[0]}</td>
+              <td class="responsecode">${asset[1]}</td>
+              <td class="filetype">${asset[2]}</td>
+              <td class="viewtype">${asset[3]}</td>
+              <td class="designation">${asset[4]}</td>
+              <td class="runningid">${asset[5]}</td>
+              <td class="fileext">${asset[6]}</td>
+              <td class="description">${asset[7].replace("\n", "")}</td>
+              <td>
+                #if assetData[3] != "":
+                  [BYGN]-${asset[1]}-${asset[2]}-[ETAGE]-${asset[3]}-${assetData[1]}_[ID]-${assetData[3]}-${asset[4]}${asset[5]}.${asset[6]}
+                #else:
+                  [BYGN]-${asset[1]}-${asset[2]}-[ETAGE]-${asset[3]}-${assetData[1]}_[ID]-XX-${asset[4]}${asset[5]}.${asset[6]}
+                #end if
+              </td>
+            </tr>
+          #end for
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="info-modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div id="info-modal-content" class="box has-text-centered">
+
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<div id="assetDocModal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width: 400px;">
+    <header id="modal-card-head" class="modal-card-head">
+      <p id="product-title" class="modal-card-title">Asset: ${assetData[1]}</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section id="modal-card-body" class="modal-card-body scrollbar">
+
+      <form id="assetDocForm" method="POST" action="/assetname/settings/types">
+
+        <input id="id" name="id" style="display: none;">
+        <input id="typeid" name="typeid" style="display: none;">
+
+        <label>Ansvar</label>
+        <br>
+        <div class="select is-info">
+          <select id="responsecode" name="responsecode">
+            <option value="A"> A Arkitekt</option>
+            <option value="C"> C Bygningsautomation</option>
+            <option value="E"> E El</option>
+            <option value="F"> F Forpagtertegning </option>
+            <option value="K"> K Konstruktion</option>
+            <option value="P"> P Produktblad på lejemål</option>
+            <option value="T"> T Infrastruktur</option>
+            <option value="V"> V VVS</option>
+            <option value=""></option>
+          </select>
+        </div>
+        <br>
+
+        <br>
+        <label>Filtype</label>
+        <br>
+        <div class="select is-info">
+          <select id="filetype" name="filetype">
+            <option value="09"> 09 Modulnet</option>
+            <option value="89"> 89 Brand</option>
+            <option value="99"> 99 Bygning, arkitekt tegninger, mv.</option>
+            <option value="HS"> HS Højspænding (10Kv) Transformerstationer, Sløjfer,</option>
+            <option value="LS"> LS Lavspænding (Kraft, stærkstrøm) 400Hz, 400V, Hovedledningsdiagrammer,</option>
+            <option value="LF"> LF Forsyning + Tavleplacering Dieselgeneratoranlæg- og tanke</option>
+            <option value="FV"> FV Fordeling Kabelføringsveje, Trækbrønd</option>
+            <option value="LY"> LY Belysning Alm. Lysinstallation, Nødbelysning, mv.</option>
+            <option value="SV"> SV Svagstrøm, alment 3 ledstarif, 50 pars- net, Elevator</option>
+            <option value="SI"> SI Sikringsanlæg</option>
+            <option value="BA"> BA Bygningsautomation CTS/SRO CTS-Tavler/CTS</option>
+            <option value="TI"> TI Trafik og Informationsanlæg Informationsanlæg(Fly- info), AIS</option>
+            <option value="AN"> AN Andre EL anlæg Elevator, Jordingsanlæg, Lon-anlæg</option>
+            <option value="EL"> EL El fælles, flere EL temaer samlet Bruges IKKE til plantegninger</option>
+            <option value="60"> 60 El i jord og på terræn</option>
+            <option value="50"> 50 VVS i jord og på terræn</option>
+            <option value="N/A"> N/A Afløb i jord</option>
+            <option value="52"> 52 Afløb og sanitet i bygning Dræn, Spildevand, Tagvand</option>
+            <option value="53"> 53 Vand Sekundavand, Brugsvand, Brandhane, Slangevinde</option>
+            <option value="54"> 54 Luftarter Naturgas, Trykluft</option>
+            <option value="55"> 55 Køling Ammoniak, HFC, Glykol, Vand, Andet</option>
+            <option value="56"> 56 Varme Fjernvarme, Varme</option>
+            <option value="57"> 57 Ventilation Varmegenvinding, Ventilation frem/retur, komponenter</option>
+            <option value="58"> 58 Sprinkling og øvrige VVS-anlæg Sprinklercentral (AVS), sprinklersystem</option>
+            <option value="59"> 59 Fælles, flere VVS-temaer samlet Bruges IKKE til plantegninger</option>
+            <option value="TK"> TK Topografi</option>
+            <option value="TV"> TV Afmærkning/bemaling</option>
+            <option value="TK"> TK Tværsnit for belægninger i terræn</option>
+            <option value=""></option>
+          </select>
+        </div>
+        <br>
+
+        <br>
+        <label>Afbildning</label>
+        <br>
+        <div class="select is-info">
+          <select id="viewtype" name="viewtype">
+            <option value="0"> 0 Generelt Flere typer i én fil, Noter, Armaturlister mv.</option>
+            <option value="1"> 1 Plan Planfiler, afleveres kun som –N/-R</option>
+            <option value="2"> 2 Opstalt Facader</option>
+            <option value="3"> 3 Snit Tværsnit, Udsnit</option>
+            <option value="5"> 5 Detalje</option>
+            <option value="6"> 6 Diagram/skema Adresselog, Tavler, VVS-anlægsdiagram, Funktionsbeskrivelser</option>
+            <option value="7"> 7 Oversigt Situationsplaner, præsentationer, o. lign.</option>
+            <option value="8"> 8 D&V Materiale Brugsanvisninger, datablade mv.</option>
+            <option value="9"> 9 KS Testrapporter Indreguleringsrapporter, målerapporter mv.</option>
+            <option value="10"> 10 3D BIM model Fælles- og fagmodeller</option>
+            <option value="11"> 11 Beregninger</option>
+            <option value=""></option>
+          </select>
+        </div>
+        <br>
+
+        <br>
+        <label>Betegnelse</label>
+        <br>
+        <div class="select is-info">
+          <select id="designation" name="designation">
+            <option value="B">Brugsanvisning</option>
+            <option value="D">Datablad</option>
+            <option value="F">Funktionsbeskrivelse</option>
+            <option value="L">Lovmæssig</option>
+            <option value="R">Reservedelsliste</option>
+            <option value="S">Servicekontrakt</option>
+            <option value="U">Udskiftningsvejledning</option>
+            <option value="V">Vedligeholdelsesvejledning</option>
+            <option value="A">Andet</option>
+            <option value="CE">CE-dokumentation</option>
+            <option value="RI">Risikovurdering</option>
+            <option value="OV">Overensstemmelseserklæring</option>
+            <option value=""></option>
+          </select>
+        </div>
+        <br>
+
+        <br>
+        <label>Løbenr</label>
+        <div class="field">
+          <div class="control">
+            <input type="text" id="runningid" name="runningid" class="input is-info">
+          </div>
+        </div>
+
+        <br>
+        <label>Filtype</label>
+        <br>
+        <div class="select is-info">
+          <select id="fileext" name="fileext">
+            <option value="pdf">pdf</option>
+            <option value="zip">zip</option>
+            <option value="xlsx">xlsx (Excel)</option>
+            <option value="docx">docx (Word)</option>
+            <option value=""></option>
+          </select>
+        </div>
+        <br>
+
+        <br>
+        <label>Beskrivelse</label>
+        <div class="field">
+          <div class="control">
+            <textarea type="text" id="description" name="description" class="textarea is-info"></textarea>
+          </div>
+        </div>
+
+        <br>
+      </form>
+
+    </section>
+    <footer class="modal-card-foot">
+      <button id="assetDocModalClose" class="button">Close</button>
+      <button type="button" class="button is-success" onclick="document.getElementById('assetDocForm').submit()">Save</button>
+    </footer>
+  </div>
+</div>
+#end proc

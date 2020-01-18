@@ -53,7 +53,8 @@ div#asset div.settings.buttons a {
 
 
 /* Doc */
-#assetDocForm .select {
+#assetDocForm .select,
+#assetDocForm select {
   width: 100%
 }
 

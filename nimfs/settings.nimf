@@ -75,7 +75,7 @@
 #proc genAssetSettingsTypes*(db: DbConn): string =
 # result = ""
 #
-# let assets = getAllRows(db, sql("SELECT id, name, description FROM asset_types;"))
+# let assets = getAllRows(db, sql("SELECT id, name, description, strictidnr FROM asset_types;"))
 #
 <link rel="stylesheet" href="/css/assetname_private.css">
 <script src="/js/assetname_private.js" defer></script>
@@ -101,6 +101,7 @@
             <th class="id">ID</th>
             <th>Name</th>
             <th>Description</th>
+            <th>Strict IDnr</th>
           </tr>
         </thead>
         <tbody>
@@ -109,6 +110,11 @@
               <td class="id">${asset[0]}</td>
               <td class="name">${asset[1]}</td>
               <td class="description">${asset[2]}</td>
+              #if asset[3] == "true":
+              <td class="strictidnr">Activated</td>
+              #else:
+              <td class="strictidnr"></td>
+              #end if
             </tr>
           #end for
         </tbody>
@@ -153,6 +159,20 @@
         <div class="field">
           <div class="control">
             <textarea type="text" id="assetDescription" name="description" class="textarea is-info"></textarea>
+          </div>
+        </div>
+
+        <label>Strict ID (running ID cannot be the same, even though building, etc. is different)</label>
+        <div class="field">
+          <div class="control">
+            <label class="radio">
+              <input id="strictno" type="radio" name="strictidnr" value="strictno" checked>
+              No
+            </label>
+            <label class="radio">
+              <input id="strictyes" type="radio" name="strictidnr" value="strictyes">
+              Yes, only unique ID's
+            </label>
           </div>
         </div>
 

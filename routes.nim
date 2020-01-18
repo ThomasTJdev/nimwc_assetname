@@ -72,7 +72,9 @@
     if @"name" == "" or getValue(db, sql("SELECT name FROM asset_types WHERE name = ?;"), @"name") != "":
       redirect("/assetname/settings/types")
 
-    exec(db, sql("INSERT INTO asset_types (name, description) VALUES (?, ?);"), @"name", @"description")
+    let strictidnr = if @"strictidnr" == "strictyes": "true" else: "false"
+
+    exec(db, sql("INSERT INTO asset_types (name, description, strictidnr) VALUES (?, ?, ?);"), @"name", @"description", strictidnr)
 
     redirect("/assetname/settings/types")
 
@@ -85,7 +87,9 @@
     if @"name" == "" or getValue(db, sql("SELECT name FROM asset_types WHERE name = ? AND id != ?;"), @"name", @"id") != "":
       redirect("/assetname/settings/types")
 
-    exec(db, sql("UPDATE asset_types SET name = ?, description = ? WHERE id = ?;"), @"name", @"description", @"id")
+    let strictidnr = if @"strictidnr" == "strictyes": "true" else: "false"
+
+    exec(db, sql("UPDATE asset_types SET name = ?, description = ?, strictidnr = ? WHERE id = ?;"), @"name", @"description", strictidnr, @"id")
 
     redirect("/assetname/settings/types")
 
@@ -260,12 +264,14 @@
 
     resp genMain(c, genAssetDataShow(db, assets, sort, @"asset", @"building", @"level", @"room", @"active", @"reqname", @"reqemail", @"reqcompany", @"creator"))
 
+
   get "/assetname/data/download/@filename":
     createTFD()
     if not c.loggedIn or c.rank notin [Admin, Moderator]:
       redirect("/")
 
     sendFile(storageEFS / "assetname" / decodeUrl(@"filename", false))
+
 
   post "/assetname/data/add":
     createTFD()
@@ -280,12 +286,21 @@
     if not isDigit(@"number"):
       resp("Error - specify the number of assets")
 
+    # Check if asset requires a unique running id
+    let strictidnr = getValue(db, sql("SELECT strictidnr FROM asset_types WHERE id = ?;"), @"type")
+
     # Check for duplicates - only relevant if idnr is specified
     # Add manually based on idnr
     if @"idnr" != "":
       let idnrFormat = assetIdFormat(@"idnr")
-      if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), @"type", @"building", @"level", idnrFormat) != "":
-        resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
+
+      if strictidnr == "true":
+        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND idnr = ?"), @"type", idnrFormat) != "":
+          resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
+
+      else:
+        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), @"type", @"building", @"level", idnrFormat) != "":
+          resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
 
     # Get running number
     var idnrNext: string
@@ -294,7 +309,7 @@
       idnrNext = assetIdFormat(@"idnr")
 
     else:
-      idnrNext = assetNextIdFind(db, @"type", @"building", @"level")
+      idnrNext = assetNextIdFind(db, @"type", @"building", @"level", strictidnr)
 
     if idnrNext == "":
       resp("Something went wrong when formatting the running number")
@@ -321,7 +336,7 @@
 
     # Check required data
     if @"type" == "" or @"building" == "" or @"level" == "":
-      resp("Error - missing required data")
+      resp("Error - missing required data: Building, Level or Assettype")
 
     # Check if running number has been changed
     if request.path == "/assetname/data/updatemany":
@@ -336,10 +351,17 @@
         idnrCurrent = assetIdFormat(@"idnr")
         if idnrCurrent == "":
           resp("Something went wrong when formatting the running number")
-
+      
+      # Check if asset requires a unique running id
+      let strictidnr = getValue(db, sql("SELECT strictidnr FROM asset_types WHERE id = ?;"), @"type")
       # Check for duplicated
-      if getValue(db, sql("SELECT id FROM asset_data WHERE building = ? AND type = ? AND level = ? AND idnr = ? AND id IS NOT ?;"), @"building", @"type", @"level", idnrCurrent, @"id") != "":
-        resp("Error - asset already exists")
+      if strictidnr == "true":
+        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND idnr = ? AND id IS NOT ?;"), @"type", idnrCurrent, @"id") != "":
+          resp("Error - asset already exists")
+
+      else:
+        if getValue(db, sql("SELECT id FROM asset_data WHERE building = ? AND type = ? AND level = ? AND idnr = ? AND id IS NOT ?;"), @"building", @"type", @"level", idnrCurrent, @"id") != "":
+          resp("Error - asset already exists")
 
       # Update running
       if @"idnr" != "" and @"idnr" != idnrCurrent:

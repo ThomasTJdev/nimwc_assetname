@@ -174,10 +174,15 @@ include "nimfs/assets.nimf"
 include "nimfs/requests.nimf"
 
 
-proc assetNextIdFind*(db: DbConn, typeid, building, level: string): string =
+proc assetNextIdFind*(db: DbConn, typeid, building, level, strictidnr: string): string =
   ## Gets the next running number
 
-  let idnrCurrent = getValue(db, sql("SELECT MAX(idnr) FROM asset_data WHERE type = ? AND building = ? AND level = ?;"), typeid, building, level)
+  var idnrCurrent: string
+  if strictidnr == "true":
+    idnrCurrent = getValue(db, sql("SELECT MAX(idnr) FROM asset_data WHERE type = ?;"), typeid)
+
+  else:
+    idnrCurrent = getValue(db, sql("SELECT MAX(idnr) FROM asset_data WHERE type = ? AND building = ? AND level = ?;"), typeid, building, level)
 
   debug("assetNextIdFind: MAX(idnr): " & idnrCurrent)
 
@@ -281,6 +286,7 @@ proc assetnameStart*(db: DbConn) =
     id INTEGER          primary key,
     name                VARCHAR(100),
     subname             VARCHAR(100),
+    strictidnr          VARCHAR(10),
     description         TEXT,
     modified timestamp not null default (STRFTIME('%s', 'now')),
     creation timestamp not null default (STRFTIME('%s', 'now'))

@@ -49,6 +49,14 @@ if ($assetEditRow.length > 0) {
       document.getElementById("assetName").value = childs[1].innerText;
       document.getElementById("assetDescription").value = childs[2].innerText;
 
+      if (childs[3].innerText == "true") {
+        document.getElementById("strictno").checked = false;
+        document.getElementById("strictyes").checked = true;
+      } else {
+        document.getElementById("strictno").checked = true;
+        document.getElementById("strictyes").checked = false;
+      }
+
       document.getElementById("assetForm").action = "/assetname/settings/types/update";
 
       document.getElementById("id").value = el.id;
@@ -64,6 +72,8 @@ function assetAdd() {
 
   document.getElementById("assetName").value = "";
   document.getElementById("assetDescription").value = "";
+  document.getElementById("strictno").checked = true;
+  document.getElementById("strictyes").checked = false;
 
   document.getElementById("assetForm").action = "/assetname/settings/types/add";
 

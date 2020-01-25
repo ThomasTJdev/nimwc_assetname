@@ -303,16 +303,19 @@ function dataEditSingle(el) {
   document.getElementById("coordinates").value = childs[10].innerText;
   document.getElementById("description").value = childs[11].innerText;
 
-  document.getElementById("date").value = childs[12].innerText;
+  document.getElementById("supplier").value = childs[12].innerText;
+  document.getElementById("oldtag").value = childs[13].innerText;
 
-  document.getElementById("reqname").value = childs[13].innerText;
-  document.getElementById("reqemail").value = childs[14].innerText;
-  document.getElementById("reqcompany").value = childs[15].innerText;
+  document.getElementById("date").value = childs[14].innerText;
 
-  document.getElementById("lastedit").value = childs[16].innerText;
+  document.getElementById("reqname").value = childs[15].innerText;
+  document.getElementById("reqemail").value = childs[16].innerText;
+  document.getElementById("reqcompany").value = childs[17].innerText;
 
-  document.getElementById("project").value = childs[17].innerText;
-  document.getElementById("projectid").value = childs[18].innerText;
+  document.getElementById("lastedit").value = childs[18].innerText;
+
+  document.getElementById("project").value = childs[19].innerText;
+  document.getElementById("projectid").value = childs[20].innerText;
 
   document.getElementById("dataForm").action = "/assetname/data/update";
 
@@ -382,7 +385,7 @@ function dataEditMany() {
   }
 
 
-  var items = "typesub,building,levelid,room,coordinates,description,reqname,reqemail,reqcompany,project,projectid".split(",");
+  var items = "typesub,building,levelid,room,coordinates,description,reqname,reqemail,reqcompany,project,projectid,supplier,oldtag".split(",");
   for (var i = 0; i < items.length; i++) {
     var item = assetLoopIdIdentical(idlist, items[i]);
     if (item == "falsi") {
@@ -439,6 +442,8 @@ function dataAdd() {
   document.getElementById("idnrOriginal").value = "";
   document.getElementById("room").value = "";
   document.getElementById("coordinates").value = "";
+  document.getElementById("supplier").value = "";
+  document.getElementById("oldtag").value = "";
   document.getElementById("description").value = "";
 
   document.getElementById("reqname").value = "";
@@ -546,4 +551,38 @@ function assetFieldWarn(on, id) {
 
 function capitalizeFirst(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+
+/*
+    Sort
+*/
+const $assetSortTh = Array.prototype.slice.call(document.querySelectorAll('#assetlistoverflow th'), 0);
+if ($assetSortTh.length > 0) {
+  $assetSortTh.forEach(el => {
+    el.addEventListener('click', () => {
+
+      var elClass = el.className;
+      if (elClass == "tagnr") {
+        return;
+      }
+      var elSort  = "ASC"
+
+      var assetDiv = document.getElementById("asset");
+      var urlSort  = assetDiv.getAttribute("data-urlsort")
+      var dbSort = assetDiv.getAttribute("data-dbsort")
+      var dbAscDesc = assetDiv.getAttribute("data-dbascdesc")
+
+      if (dbSort == elClass) {
+        if (dbAscDesc == "ASC") {
+          elSort = "DESC"
+        } else {
+          elSort = "ASC"
+        }
+      }
+
+      window.location.href = "/assetname/data/show?dbsort=" + elClass + "&ascdesc=" + elSort + "&" + urlSort;
+
+    });
+  });
 }

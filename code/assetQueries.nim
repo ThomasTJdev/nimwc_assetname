@@ -21,7 +21,9 @@ const assetQueryData* = """
       pe.name,
       pm.name,
       ad.project,
-      ad.projectid
+      ad.projectid,
+      ad.supplier,
+      ad.oldtag
     FROM
       asset_data AS ad
     LEFT JOIN
@@ -29,12 +31,11 @@ const assetQueryData* = """
     LEFT JOIN
       person AS pe ON pe.id = ad.creator
     LEFT JOIN
-      person AS pm ON pe.id = ad.modifiedby
+      person AS pm ON pm.id = ad.modifiedby
     $1
     GROUP BY
       ad.id
-    ORDER
-      BY ad.building, at.name, ad.level, ad.idnr;"""
+    $2;"""
 
 const assetQueryDocumentation* = """
     SELECT

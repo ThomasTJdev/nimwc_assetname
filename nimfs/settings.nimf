@@ -64,11 +64,90 @@
       <div>
         <a class="button is-link" href="/assetname/data">Asset data</a>
       </div>
+      <br>
+      <div>
+        <a class="button is-link" href="/assetname/import">Import data</a>
+      </div>
     </div>
 
   </div>
 
 </div>
+#end proc
+#
+#
+#proc genAssetImport*(db: DbConn, message = ""): string =
+# result = ""
+#
+<link rel="stylesheet" href="/css/assetname_private.css">
+<script src="/js/assetname_private.js" defer></script>
+
+<div id="asset">
+
+  <div class="settings types">
+
+    <h1>Import asset data</h1>
+
+    <hr>
+
+    # if message != "":
+    <div style="padding: 20px; border: 1px solid black;">
+      <h3 class="has-text-centered">${message}</h3>
+    </div>
+
+    <hr>
+
+    # end if
+
+    <p>Export the assets from the overview to Excel and use this Excel file below. To add new assets: only include new assets in the file. To update existing asset: remember to keep the first column "ID".</p>
+
+    <p>It is not allowed to specify the IDnr yourself. You always need to specify building, level and floor.</p>
+
+    <div>
+      <form method="POST" action="/assetname/import/new" enctype="multipart/form-data" style="max-width: 300px;margin-left: auto;margin-right: auto;border: 1px solid black;padding: 10px;">
+        <p><b>Add new assets</b></p>
+        <input type="file" class="btn btn-custom btn-secondary" id="file" name="file" value="file" style="height: 40px;margin-left: auto;margin-right: auto;margin-bottom: 10px;" onchange="document.getElementById('xlsxFastImport').style.display='initial'">
+        <button type="submit" class="btn btn-success" style="display: none;" id="xlsxFastImport">Upload</button>
+      </form>
+    </div>
+
+    <div>
+      <form method="POST" action="/assetname/import/update" enctype="multipart/form-data" style="max-width: 300px;margin-left: auto;margin-right: auto;border: 1px solid black;padding: 10px;">
+        <p><b>Update existing assets</b></p>
+        <input type="file" class="btn btn-custom btn-secondary" id="file" name="file" value="file" style="height: 40px;margin-left: auto;margin-right: auto;margin-bottom: 10px;" onchange="document.getElementById('xlsxFastUpdate').style.display='initial'">
+        <button type="submit" class="btn btn-success" style="display: none;" id="xlsxFastUpdate">Upload</button>
+      </form>
+    </div>
+
+    <!--
+    <div>
+      <h3>Import new data</h3>
+      <p>To import you need to format your data as CSV with ; as the separator.</p>
+
+      <form method="POST" action="/assetname/import/new">
+        <textarea class="textarea" name="csvdata"></textarea>
+        <button type="submit" class="button is-link">Submit</button>
+      </form>
+    </div>
+
+    <hr>
+
+    <div>
+      <h3>Update existing data</h3>
+      <p>To update existing data, your data needs to include the database ID.</p>
+      <p>To import you need to format your data as CSV with ; as the separator.</p>
+
+      <form method="POST" action="/assetname/import/update">
+        <textarea class="textarea" name="csvdata"></textarea>
+        <button type="submit" class="button is-link">Submit</button>
+      </form>
+    </div>
+    -->
+
+  </div>
+
+</div>
+
 #end proc
 #
 #

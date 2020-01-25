@@ -11,34 +11,14 @@ import
 
 from math import ceil
 
-import assetQueries
+import assetQueries, assetData
 
-const rlAscii  = toSeq('a'..'z')
-const rhAscii  = toSeq('A'..'Z')
-proc randomStringAlpha*(length: int): string =
-  ## Generate random number with alpha.
-  ## The length is specified as parameter.
-  randomize()
-  result = ""
-
-  for i in countUp(1, length):
-    var runRandom = rand(1)
-
-    case runRandom
-    of 0:
-      result.add(sample(rlAscii))
-    of 1:
-      result.add(sample(rhAscii))
-    else:
-      discard
-
-  return result
 
 proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[b: bool, path, filename: string] =
   ## Export assets to XLSX
 
   let
-    queryString = assetQueryData.format(queryWhere)
+    queryString = assetQueryData.format(queryWhere, " ORDER BY ad.building, at.name, ad.level, ad.idnr")
     assets = getAllRows(db, sql(queryString))
     assetsDocumentation = getAllRows(db, sql(assetQueryDocumentation.format(queryWhere))) #, "")))
     assetsOm = getAllRows(db, sql(assetQueryOm.format(queryWhere))) #, "")))
@@ -191,6 +171,14 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
   discard worksheet_write_string(worksheet1, 2, col, "Description", formatHeading)
 
   col += 1'u16
+  discard worksheet_set_column(worksheet1, col, col, 10, nil)
+  discard worksheet_write_string(worksheet1, 2, col, "Supplier", formatHeading)
+
+  col += 1'u16
+  discard worksheet_set_column(worksheet1, col, col, 10, nil)
+  discard worksheet_write_string(worksheet1, 2, col, "Old tag", formatHeading)
+
+  col += 1'u16
   discard worksheet_set_column(worksheet1, col, col, 15, nil)
   discard worksheet_write_string(worksheet1, 2, col, "Reg. name", formatHeading)
 
@@ -249,6 +237,8 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
       modifiedName = a[17]
       project = a[18]
       projectid = a[19]
+      supplier = a[20]
+      oldtag = a[21]
 
     # Set test options
     let formatChoice = if active == "Reserved": formatTextYellow else: formatText
@@ -293,6 +283,12 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
 
     colNr += 1'u16
     discard worksheet_write_string(worksheet1, rowNr, colNr, description, formatChoice)
+
+    colNr += 1'u16
+    discard worksheet_write_string(worksheet1, rowNr, colNr, supplier, formatChoice)
+
+    colNr += 1'u16
+    discard worksheet_write_string(worksheet1, rowNr, colNr, oldtag, formatChoice)
 
     colNr += 1'u16
     discard worksheet_write_string(worksheet1, rowNr, colNr, reqName, formatChoice)
@@ -556,7 +552,7 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
         colNr += 1'u16
       asset = tagnrSAP
       rowNr += 1'u32
-    
+
     asset = tagnrSAP
 
     colNr = 0'u16

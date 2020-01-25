@@ -172,6 +172,8 @@
       reqEmail: bool
       reqCompany: bool
       creator: bool
+      supplier: bool
+      oldtag: bool
       sort: string
 
     if @"asset" != "":
@@ -224,7 +226,17 @@
       sort.add("creator=" & @"creator")
       creator = true
 
-    let queryWhere = assetQuery(typeid, building, level, activeUsed, activeReserved, room, reqName, reqEmail, reqCompany, creator, @"asset", @"building", @"level", @"room", @"reqname", @"reqemail", @"reqcompany", @"creator")
+    if @"supplier" != "":
+      if sort != "": sort.add("&")
+      sort.add("supplier=" & @"supplier")
+      supplier = true
+
+    if @"oldtag" != "":
+      if sort != "": sort.add("&")
+      sort.add("oldtag=" & @"oldtag")
+      oldtag = true
+
+    let queryWhere = assetQuery(typeid, building, level, activeUsed, activeReserved, room, reqName, reqEmail, reqCompany, creator, supplier, oldtag, @"asset", @"building", @"level", @"room", @"reqname", @"reqemail", @"reqcompany", @"creator", @"supplier", @"oldtag")
 
     if @"export" == "all":
       let (xlsxB, xlsxPath, xlsxFilename) = assetXlsx(db, "", storageEFS / "assetname", "All")
@@ -259,10 +271,40 @@
 
         redirect("/assetname/data/download/" & xlsxFilename)
 
-    let queryString = assetQueryData.format(queryWhere)
+    var queryOrder: string
+    if @"dbsort" != "" and @"dbsort" in ["id", "type", "active", "typesub", "building", "levelid", "idnr", "room", "coordinates", "description", "modified", "reqname", "reqemail", "reqcompany", "lastedit", "project", "projectid", "supplier", "oldtag"]:
+      var dbSort: string
+      case @"dbsort"
+      of "levelid":
+        dbSort = "ad.level"
+      of "typeid":
+        dbSort = "ad.type"
+      of "type":
+        dbSort = "at.name"
+      of "typesub":
+        dbSort = "ad.typesubname"
+      of "lastedit":
+        dbSort = "pm.name"
+      of "reqname":
+        dbSort = "ad.reqName"
+      of "reqEmail":
+        dbSort = "ad.reqEmail"
+      of "reqCompany":
+        dbSort = "ad.reqCompany"
+      else:
+        dbSort = "ad." & @"dbsort"
+
+      if @"ascdesc" in ["ASC", "DESC"]:
+        queryOrder = " ORDER BY " & dbSort & " " & @"ascdesc"
+      else:
+        queryOrder = " ORDER BY " & dbSort
+    else:
+      queryOrder = " ORDER BY ad.building, at.name, ad.level, ad.idnr"
+
+    let queryString = assetQueryData.format(queryWhere, queryOrder)
     let assets = getAllRows(db, sql(queryString))
 
-    resp genMain(c, genAssetDataShow(db, assets, sort, @"asset", @"building", @"level", @"room", @"active", @"reqname", @"reqemail", @"reqcompany", @"creator"))
+    resp genMain(c, genAssetDataShow(db, assets, sort, @"asset", @"building", @"level", @"room", @"active", @"reqname", @"reqemail", @"reqcompany", @"creator", @"supplier", @"oldtag", @"dbsort", @"ascdesc"))
 
 
   get "/assetname/data/download/@filename":
@@ -294,13 +336,16 @@
     if @"idnr" != "":
       let idnrFormat = assetIdFormat(@"idnr")
 
-      if strictidnr == "true":
-        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND idnr = ?"), @"type", idnrFormat) != "":
-          resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
+      if not assetCheckDuplicatesAdd(db, @"type", @"building", @"level", idnrFormat):
+        resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
 
-      else:
-        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), @"type", @"building", @"level", idnrFormat) != "":
-          resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
+      #if strictidnr == "true":
+      #  if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND idnr = ?"), @"type", idnrFormat) != "":
+      #    resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
+
+      #else:
+      #  if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), @"type", @"building", @"level", idnrFormat) != "":
+      #    resp("Error - an asset already exists with: <br><br><div>Type: <br>Building: <br>IDnr: </div>")
 
     # Get running number
     var idnrNext: string
@@ -316,13 +361,33 @@
 
     # Check again for duplicated
     if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), @"type", @"building", @"level", idnrNext) != "":
-      resp("Error - an asset already exists with: 1")
+      resp("Error - an asset already exists with: " & idnrNext)
 
     # Check if we're going to add multiple assets
 
     for i in countup(1, parseInt(@"number")):
+      var assetData: AssetData
+      assetData.active      = @"active"
+      assetData.assettype   = ""
+      assetData.assettypeid = @"type"
+      assetData.typesubname = @"typesub"
+      assetData.building    = @"building"
+      assetData.level       = @"level"
+      assetData.idnr        = idnrNext
+      assetData.room        = @"room"
+      assetData.coordinates = @"coordinates"
+      assetData.description = @"description"
+      assetData.supplier    = @"supplier"
+      assetData.oldtag      = @"oldtag"
+      assetData.reqName     = @"reqname"
+      assetData.reqEmail    = @"reqemail"
+      assetData.reqCompany  = @"reqcompany"
+      assetData.creator     = c.userid
+      assetData.project     = @"project"
+      assetData.projectid   = @"projectid"
 
-      exec(db, sql("INSERT INTO asset_data (active, type, typesubname, building, level, idnr, room, coordinates, description, reqName, reqEmail, reqCompany, creator, project, projectid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"), @"active", @"type", @"typesub", @"building", @"level", idnrNext, @"room", @"coordinates", @"description", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid")
+      assetAdd(db, @"active", @"type", @"typesub", @"building", @"level", idnrNext, @"room", @"coordinates", @"description", @"supplier", @"oldtag", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid")
+      #exec(db, sql("INSERT INTO asset_data (active, type, typesubname, building, level, idnr, room, coordinates, description, reqName, reqEmail, reqCompany, creator, project, projectid, supplier, oldtag) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"), @"active", @"type", @"typesub", @"building", @"level", idnrNext, @"room", @"coordinates", @"description", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", @"supplier", @"oldtag")
 
       idnrNext = assetNextIdCalc(idnrNext)
 
@@ -341,8 +406,14 @@
     # Check if running number has been changed
     if request.path == "/assetname/data/updatemany":
       for id in split(@"id", ","):
+        # Check duplicated
+        let idnrCurrent = getValue(db, sql("SELECT idnr FROM asset_data WHERE id = ?;"), id)
+        if not assetCheckDuplicatesUpdate(db, @"type", @"building", @"level", idnrCurrent, id):
+          resp("Error - asset already exists")
+
         # Update data
-        exec(db, sql("UPDATE asset_data SET active = ?, type = ?, typesubname = ?, building = ?, level = ?, room = ?, coordinates = ?, description = ?, reqName = ?, reqEmail = ?, reqCompany = ?, modifiedby = ?, project = ?, projectid = ? WHERE id = ?;"), @"active", @"type", @"typesub", @"building", @"level", @"room", @"coordinates", @"description", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", id)
+        assetUpdate(db, @"active", @"type", @"typesub", @"building", @"level", @"room", @"coordinates", @"description", @"supplier", @"oldtag", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", id)
+        #exec(db, sql("UPDATE asset_data SET active = ?, type = ?, typesubname = ?, building = ?, level = ?, room = ?, coordinates = ?, description = ?, reqName = ?, reqEmail = ?, reqCompany = ?, modifiedby = ?, project = ?, projectid = ?, supplier = ?, oldtag = ? WHERE id = ?;"), @"active", @"type", @"typesub", @"building", @"level", @"room", @"coordinates", @"description", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", @"supplier", @"oldtag", id)
 
     elif request.path == "/assetname/data/update":
       var idnrCurrent = getValue(db, sql("SELECT idnr FROM asset_data WHERE id = ?;"), @"id")
@@ -351,17 +422,18 @@
         idnrCurrent = assetIdFormat(@"idnr")
         if idnrCurrent == "":
           resp("Something went wrong when formatting the running number")
-      
-      # Check if asset requires a unique running id
-      let strictidnr = getValue(db, sql("SELECT strictidnr FROM asset_types WHERE id = ?;"), @"type")
-      # Check for duplicated
-      if strictidnr == "true":
-        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND idnr = ? AND id IS NOT ?;"), @"type", idnrCurrent, @"id") != "":
-          resp("Error - asset already exists")
 
-      else:
-        if getValue(db, sql("SELECT id FROM asset_data WHERE building = ? AND type = ? AND level = ? AND idnr = ? AND id IS NOT ?;"), @"building", @"type", @"level", idnrCurrent, @"id") != "":
-          resp("Error - asset already exists")
+      # Check if asset requires a unique running id
+      if not assetCheckDuplicatesUpdate(db, @"type", @"building", @"level", idnrCurrent, @"id"):
+        resp("Error - asset already exists")
+      #let strictidnr = getValue(db, sql("SELECT strictidnr FROM asset_types WHERE id = ?;"), @"type")
+      # Check for duplicated
+      #if strictidnr == "true":
+      #  if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND idnr = ? AND id IS NOT ?;"), @"type", idnrCurrent, @"id") != "":
+      #    resp("Error - asset already exists")
+      #else:
+      #  if getValue(db, sql("SELECT id FROM asset_data WHERE building = ? AND type = ? AND level = ? AND idnr = ? AND id IS NOT ?;"), @"building", @"type", @"level", idnrCurrent, @"id") != "":
+      #    resp("Error - asset already exists")
 
       # Update running
       if @"idnr" != "" and @"idnr" != idnrCurrent:
@@ -369,7 +441,8 @@
         exec(db, sql("UPDATE asset_data SET idnr = ? WHERE id = ?;"), @"id")
 
       # Update data
-      exec(db, sql("UPDATE asset_data SET active = ?, type = ?, typesubname = ?, building = ?, level = ?, room = ?, coordinates = ?, description = ?, reqName = ?, reqEmail = ?, reqCompany = ?, modifiedby = ?, project = ?, projectid = ? WHERE id = ?;"), @"active", @"type", @"typesub", @"building", @"level", @"room", @"coordinates", @"description", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", @"id")
+      assetUpdate(db, @"active", @"type", @"typesub", @"building", @"level", @"room", @"coordinates", @"description", @"supplier", @"oldtag", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", @"id")
+      #exec(db, sql("UPDATE asset_data SET active = ?, type = ?, typesubname = ?, building = ?, level = ?, room = ?, coordinates = ?, description = ?, reqName = ?, reqEmail = ?, reqCompany = ?, modifiedby = ?, project = ?, projectid = ?, supplier = ?, oldtag = ? WHERE id = ?;"), @"active", @"type", @"typesub", @"building", @"level", @"room", @"coordinates", @"description", @"reqname", @"reqemail", @"reqcompany", c.userid, @"project", @"projectid", @"supplier", @"oldtag", @"id")
 
 
     redirect("/assetname/data/show?" & @"urlsort")
@@ -383,3 +456,60 @@
     exec(db, sql("DELETE FROM asset_data WHERE id = ?"), @"id")
 
     redirect("/assetname/data/show?" & @"urlsort")
+
+
+
+  #[
+    Settings: Import
+  ]#
+
+  get "/assetname/import":
+    createTFD()
+    if not c.loggedIn or c.rank notin [Admin, Moderator]:
+      redirect("/")
+
+    resp genMain(c, genAssetImport(db))
+
+
+  post re"/assetname/import/(new|update)":
+    createTFD()
+    if not c.loggedIn or c.rank notin [Admin, Moderator]:
+      redirect("/")
+
+    let path = storageEFS / "assetname" / randomStringAlpha(10) & ".xlsx"
+    if fileExists(path):
+      resp("An error occurred (intern filepath exists)")
+
+    try:
+      writeFile(path, request.formData.getOrDefault("file").body)
+    except:
+      resp("An error occurred")
+
+    if fileExists(path):
+      var xlsxData: SheetTable
+      try:
+        xlsxData = parseExcel(path)
+      except:
+        resp("Internal parsing error of XLSX file")
+
+      var
+        xlsxBool: bool
+        xlsxRes: string
+
+      case request.path
+      of "/assetname/import/new":
+        (xlsxBool, xlsxRes) = assetImportXlsx(db, c.userid, xlsxData, false)
+      of "/assetname/import/update":
+        (xlsxBool, xlsxRes) = assetImportXlsx(db, c.userid, xlsxData, true)
+      else:
+        resp("ERROR")
+
+      discard tryRemoveFile(path)
+
+      debug(xlsxRes)
+
+      if xlsxBool:
+        let message = xlsxRes
+        resp genMain(c, genAssetImport(db, message))
+
+      resp(xlsxRes)

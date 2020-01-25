@@ -15,8 +15,10 @@ import
   parsecfg,
   re,
   smtp,
-  strformat,
   strutils
+
+import xlsx
+export parseExcel, SheetTable
 
 from times import epochTime
 
@@ -30,8 +32,14 @@ else:                   import db_sqlite
 
 import code/assetQueries
 export assetQueryData
-import code/exportAssets
+import code/assetExport
 export assetXlsx
+import code/assetImport
+export assetImportXlsx
+import code/assetData
+export assetNextIdFind, assetNextIdCalc, assetIdFormat, assetAdd, assetUpdate, assetCheckDuplicatesUpdate, assetCheckDuplicatesAdd, randomStringAlpha, isDigit
+import code/assetTypes
+export AssetData
 
 let (assetN, assetV*, assetD, assetU) = pluginGetDetails("assetname")
 proc pluginInfo() =
@@ -90,7 +98,7 @@ let
     where.add(" ad.creator = ? ")]#
 
 
-proc assetQuery*(typeid = false, building = false, level = false, activeUsed = false, activeReserved = false, room = false, reqName = false, reqEmail = false, reqCompany = false, creator = false, sasset, sbuilding, slevel, sroom, sreqname, sreqemail, sreqcompany, screator: string): string =
+proc assetQuery*(typeid = false, building = false, level = false, activeUsed = false, activeReserved = false, room = false, reqName = false, reqEmail = false, reqCompany = false, creator = false, supplier = false, oldtag = false, sasset, sbuilding, slevel, sroom, sreqname, sreqemail, sreqcompany, screator, ssupplier, soldtag: string): string =
   ## Generate the select query for assets. Specify the where clause.
 
   #ad.type = ? AND ad.building = ?
@@ -124,46 +132,15 @@ proc assetQuery*(typeid = false, building = false, level = false, activeUsed = f
   if creator:
     if where != "": where.add(" AND ")
     where.add(" ad.creator = " & dbQuote(screator))
+  if supplier:
+    if where != "": where.add(" AND ")
+    where.add(" ad.supplier = " & dbQuote(ssupplier))
+  if oldtag:
+    if where != "": where.add(" AND ")
+    where.add(" ad.oldtag = " & dbQuote(soldtag))
 
   if where != "":
     where = "WHERE " & where
-
-  #[
-  let query = """
-    SELECT
-      ad.id,
-      at.name,
-      ad.active,
-      ad.type,
-      ad.typesubname,
-      ad.building,
-      ad.level,
-      ad.idnr,
-      ad.item1,
-      ad.room,
-      ad.coordinates,
-      ad.description,
-      ad.modified,
-      ad.reqName,
-      ad.reqEmail,
-      ad.reqCompany,
-      pe.name,
-      pm.name,
-      ad.project,
-      ad.projectid
-    FROM
-      asset_data AS ad
-    LEFT JOIN
-      asset_types AS at ON at.id = ad.type
-    LEFT JOIN
-      person AS pe ON pe.id = ad.creator
-    LEFT JOIN
-      person AS pm ON pe.id = ad.modifiedby
-    $1
-    GROUP BY
-      ad.id
-    ORDER
-      BY ad.building, at.name, ad.level, ad.idnr;""" % [where]]#
 
   return where
 
@@ -173,42 +150,6 @@ include "nimfs/settings.nimf"
 include "nimfs/assets.nimf"
 include "nimfs/requests.nimf"
 
-
-proc assetNextIdFind*(db: DbConn, typeid, building, level, strictidnr: string): string =
-  ## Gets the next running number
-
-  var idnrCurrent: string
-  if strictidnr == "true":
-    idnrCurrent = getValue(db, sql("SELECT MAX(idnr) FROM asset_data WHERE type = ?;"), typeid)
-
-  else:
-    idnrCurrent = getValue(db, sql("SELECT MAX(idnr) FROM asset_data WHERE type = ? AND building = ? AND level = ?;"), typeid, building, level)
-
-  debug("assetNextIdFind: MAX(idnr): " & idnrCurrent)
-
-  if idnrCurrent == "":
-    return "001"
-
-  else:
-    return alignString($(parseInt(idnrCurrent) + 1), 3, align='>', fill='0')
-
-proc assetNextIdCalc*(currentId: string): string =
-  ## Gets the next running number
-
-  if currentId == "0" or not isDigit(currentId):
-    error("Plugin asset: Id to calc from is 0 (zero) or is invalid digit: " & currentId)
-    return ""
-
-  return alignString($(parseInt(currentId) + 1), 3, align='>', fill='0')
-
-proc assetIdFormat*(idnr: string): string =
-  ## Gets the next running number
-
-  if idnr == "0" or not isDigit(idnr):
-    error("Plugin asset: Id to calc from is 0 (zero) or is invalid digit: " & idnr)
-    return ""
-
-  return alignString($(parseInt(idnr)), 3, align='>', fill='0')
 
 #[
 proc sendassetReceipt*(mailTo, subject, msg, filepath, receiptNr: string) {.async.} =
@@ -317,6 +258,9 @@ proc assetnameStart*(db: DbConn) =
 
     project      VARCHAR(200),
     projectid    VARCHAR(200),
+
+    oldtag       VARCHAR(1000),
+    supplier     VARCHAR(1000),
 
     modified timestamp not null default (STRFTIME('%s', 'now')),
     creation timestamp not null default (STRFTIME('%s', 'now')),

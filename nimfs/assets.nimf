@@ -28,7 +28,7 @@
 #end proc
 #
 #
-#proc genAssetDataShow*(db: DbConn, assets: seq[Row], urlsort, assetType, buildingType, slevel, sroom, sactive, sreqname, sreqemail, sreqcompany, screator: string): string =
+#proc genAssetDataShow*(db: DbConn, assets: seq[Row], urlsort, assetType, buildingType, slevel, sroom, sactive, sreqname, sreqemail, sreqcompany, screator, ssupplier, soldtag, dbSort, dbAscDesc: string): string =
 # result = ""
 #
 #
@@ -45,7 +45,7 @@
 <link rel="stylesheet" href="/css/assetname_private.css">
 <script src="/js/assetname_private.js" defer></script>
 
-<div id="asset" data-assetid="${assetType}" data-building="${buildingType}" data-level="${slevel}">
+<div id="asset" data-assetid="${assetType}" data-building="${buildingType}" data-level="${slevel}" data-urlsort="${urlsort}" data-dbsort="${dbSort}" data-dbascdesc="${dbAscDesc}">
 
   <div class="settings data">
 
@@ -295,7 +295,7 @@
           <thead>
             <tr>
               <th class="id">ID</th>
-              <th class="tagnr">Tag nr.</th>
+              <th class="tagnr" style="cursor: default;">Tag nr.</th>
               <th class="active">Active</th>
               <th class="type">Type</th>
               <th class="typeid" style="display: none;">Type ID</th>
@@ -306,6 +306,8 @@
               <th class="room">Room</th>
               <th class="coordinates">Coordinates</th>
               <th class="description">Description</th>
+              <th class="supplier">Supplier</th>
+              <th class="oldtag">Old tag</th>
               <th class="modified">Modified</th>
               <th class="reqname">Req. name</th>
               <th class="reqemail">Req. email</th>
@@ -348,6 +350,8 @@
                 <td class="has-text-centered room">${asset[9]}</td>
                 <td class="coordinates">${asset[10]}</td>
                 <td class="description">${asset[11]}</td>
+                <td class="supplier">${asset[20]}</td>
+                <td class="oldtag">${asset[21]}</td>
                 <td class="modified">${epochDate(asset[12], "YYYY-MM-DD HH:mm")}</td>
                 <td class="reqname">${asset[13]}</td>
                 <td class="reqemail">${asset[14]}</td>
@@ -488,6 +492,20 @@
               <div class="field">
                 <div class="control">
                   <input type="text" id="coordinates" name="coordinates" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Supplier</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="supplier" name="supplier" class="input is-info item" value="">
+                </div>
+              </div>
+
+              <label>Old tag</label>
+              <div class="field">
+                <div class="control">
+                  <input type="text" id="oldtag" name="oldtag" class="input is-info item" value="">
                 </div>
               </div>
 

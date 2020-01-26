@@ -98,7 +98,7 @@ let
     where.add(" ad.creator = ? ")]#
 
 
-proc assetQuery*(typeid = false, building = false, level = false, activeUsed = false, activeReserved = false, room = false, reqName = false, reqEmail = false, reqCompany = false, creator = false, supplier = false, oldtag = false, sasset, sbuilding, slevel, sroom, sreqname, sreqemail, sreqcompany, screator, ssupplier, soldtag: string): string =
+proc assetQuery*(typeid = false, building = false, level = false, activeUsed = false, activeReserved = false, activeRemoved = false, room = false, reqName = false, reqEmail = false, reqCompany = false, creator = false, supplier = false, oldtag = false, sasset, sbuilding, slevel, sroom, sreqname, sreqemail, sreqcompany, screator, ssupplier, soldtag: string): string =
   ## Generate the select query for assets. Specify the where clause.
 
   #ad.type = ? AND ad.building = ?
@@ -117,6 +117,9 @@ proc assetQuery*(typeid = false, building = false, level = false, activeUsed = f
   elif activeReserved:
     if where != "": where.add(" AND ")
     where.add(" ad.active = 'Reserved' ")
+  elif activeRemoved:
+    if where != "": where.add(" AND ")
+    where.add(" ad.active = 'Removed' ")
   if room:
     if where != "": where.add(" AND ")
     where.add(" ad.room = " & dbQuote(sroom))

@@ -76,6 +76,9 @@ div#asset .assetlist.all thead th {
 div#asset .assetlist.all tr.yellow {
   background-color: #fbe267;
 }
+div#asset .assetlist.all tr.red {
+  background-color: #fd7e68;
+}
 /*div#asset .assetlist.all td.tagnr,
 div#asset .assetlist.all td.modified,
 div#asset .assetlist.all td.project,

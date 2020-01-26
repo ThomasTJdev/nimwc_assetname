@@ -50,9 +50,11 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
   var formatOverall: ptr lxw_format = workbook_add_format(workbook)
   var formatHeading: ptr lxw_format = workbook_add_format(workbook)
   var formatText: ptr lxw_format = workbook_add_format(workbook)
+  var formatTextCenter: ptr lxw_format = workbook_add_format(workbook)
   var formatTextYellow: ptr lxw_format = workbook_add_format(workbook)
   var formatTextYellowCenter: ptr lxw_format = workbook_add_format(workbook)
-  var formatTextCenter: ptr lxw_format = workbook_add_format(workbook)
+  var formatTextRed: ptr lxw_format = workbook_add_format(workbook)
+  var formatTextRedCenter: ptr lxw_format = workbook_add_format(workbook)
   var formatGrey: ptr lxw_format = workbook_add_format(workbook)
 
   # Set formatOverall
@@ -90,6 +92,18 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
   format_set_align(formatText, 10)
   format_set_text_wrap(formatText)
 
+  # Set formatTextCenter
+  format_set_bg_color(formatTextCenter, 0xFFFFFF)
+  format_set_font_name(formatTextCenter, "Arial")
+  format_set_font_size(formatTextCenter, 10)
+  format_set_font_color(formatTextCenter, 0x1000000)
+  format_set_border(formatTextCenter, 1)
+  format_set_border_color(formatTextCenter, 0x1000000)
+  format_set_align(formatTextCenter, 10)
+  format_set_text_wrap(formatTextCenter)
+  format_set_align(formatTextCenter, 10)
+  format_set_align(formatTextCenter, 2)
+
   # Set formatTextYellow
   format_set_bg_color(formatTextYellow, 0xFDD253)
   format_set_font_name(formatTextYellow, "Arial")
@@ -112,17 +126,28 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
   format_set_align(formatTextYellowCenter, 10)
   format_set_align(formatTextYellowCenter, 2)
 
-  # Set formatTextCenter
-  format_set_bg_color(formatTextCenter, 0xFFFFFF)
-  format_set_font_name(formatTextCenter, "Arial")
-  format_set_font_size(formatTextCenter, 10)
-  format_set_font_color(formatTextCenter, 0x1000000)
-  format_set_border(formatTextCenter, 1)
-  format_set_border_color(formatTextCenter, 0x1000000)
-  format_set_align(formatTextCenter, 10)
-  format_set_text_wrap(formatTextCenter)
-  format_set_align(formatTextCenter, 10)
-  format_set_align(formatTextCenter, 2)
+  # Set formatTextRed
+  format_set_bg_color(formatTextRed, 0xFD7553)
+  format_set_font_name(formatTextRed, "Arial")
+  format_set_font_size(formatTextRed, 10)
+  format_set_font_color(formatTextRed, 0x1000000)
+  format_set_border(formatTextRed, 1)
+  format_set_border_color(formatTextRed, 0x1000000)
+  format_set_align(formatTextRed, 10)
+  format_set_text_wrap(formatTextRed)
+
+  # Set formatTextRedCenterCenter
+  format_set_bg_color(formatTextRedCenter, 0xFD7553)
+  format_set_font_name(formatTextRedCenter, "Arial")
+  format_set_font_size(formatTextRedCenter, 10)
+  format_set_font_color(formatTextRedCenter, 0x1000000)
+  format_set_border(formatTextRedCenter, 1)
+  format_set_border_color(formatTextRedCenter, 0x1000000)
+  format_set_align(formatTextRedCenter, 10)
+  format_set_text_wrap(formatTextRedCenter)
+  format_set_align(formatTextRedCenter, 10)
+  format_set_align(formatTextRedCenter, 2)
+
 
   discard worksheet_write_string(worksheet1, 0, 0, "Assets", formatOverall)
 
@@ -241,8 +266,8 @@ proc assetXlsx*(db: DbConn, queryWhere, storagePath, exportType: string): tuple[
       oldtag = a[21]
 
     # Set test options
-    let formatChoice = if active == "Reserved": formatTextYellow else: formatText
-    let formatChoiceCenter = if active == "Reserved": formatTextYellowCenter else: formatTextCenter
+    let formatChoice = if active == "Reserved": formatTextYellow elif active == "Removed": formatTextRed else: formatText
+    let formatChoiceCenter = if active == "Reserved": formatTextYellowCenter elif active == "Removed": formatTextRedCenter else: formatTextCenter
 
     # Set row number
     rowNr += 1'u32

@@ -167,6 +167,7 @@
       level: bool
       activeUsed: bool
       activeReserved: bool
+      activeRemoved: bool
       room: bool
       reqName: bool
       reqEmail: bool
@@ -200,6 +201,10 @@
         if sort != "": sort.add("&")
         sort.add("active=" & @"active")
         activeUsed = true
+      elif @"active" == "Removed":
+        if sort != "": sort.add("&")
+        sort.add("active=" & @"active")
+        activeRemoved = true
 
     if @"room" != "":
       if sort != "": sort.add("&")
@@ -236,7 +241,7 @@
       sort.add("oldtag=" & @"oldtag")
       oldtag = true
 
-    let queryWhere = assetQuery(typeid, building, level, activeUsed, activeReserved, room, reqName, reqEmail, reqCompany, creator, supplier, oldtag, @"asset", @"building", @"level", @"room", @"reqname", @"reqemail", @"reqcompany", @"creator", @"supplier", @"oldtag")
+    let queryWhere = assetQuery(typeid, building, level, activeUsed, activeReserved, activeRemoved, room, reqName, reqEmail, reqCompany, creator, supplier, oldtag, @"asset", @"building", @"level", @"room", @"reqname", @"reqemail", @"reqcompany", @"creator", @"supplier", @"oldtag")
 
     if @"export" == "all":
       let (xlsxB, xlsxPath, xlsxFilename) = assetXlsx(db, "", storageEFS / "assetname", "All")
@@ -261,7 +266,7 @@
       if queryWhere != "":
         queryWhereSelected = queryWhere & " AND ad.id IN (" & @"ids" & ")"
       else:
-        queryWhereSelected = "ad.id IN (" & @"ids" & ")"
+        queryWhereSelected = " WHERE ad.id IN (" & @"ids" & ")"
 
       let (xlsxB, xlsxPath, xlsxFilename) = assetXlsx(db, queryWhereSelected, storageEFS / "assetname", "Sorted")
 
@@ -453,7 +458,8 @@
     if not c.loggedIn or c.rank notin [Admin, Moderator]:
       redirect("/")
 
-    exec(db, sql("DELETE FROM asset_data WHERE id = ?"), @"id")
+    for id in split(@"id", ","):
+      exec(db, sql("DELETE FROM asset_data WHERE id = ?"), id)
 
     redirect("/assetname/data/show?" & @"urlsort")
 
@@ -498,9 +504,9 @@
 
       case request.path
       of "/assetname/import/new":
-        (xlsxBool, xlsxRes) = assetImportXlsx(db, c.userid, xlsxData, false)
+        (xlsxBool, xlsxRes) = assetImportXlsx(db, c.userid, $c.rank, xlsxData, false)
       of "/assetname/import/update":
-        (xlsxBool, xlsxRes) = assetImportXlsx(db, c.userid, xlsxData, true)
+        (xlsxBool, xlsxRes) = assetImportXlsx(db, c.userid, $c.rank, xlsxData, true)
       else:
         resp("ERROR")
 

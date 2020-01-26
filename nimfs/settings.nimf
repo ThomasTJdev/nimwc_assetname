@@ -101,7 +101,7 @@
 
     <p>Export the assets from the overview to Excel and use this Excel file below. To add new assets: only include new assets in the file. To update existing asset: remember to keep the first column "ID".</p>
 
-    <p>It is not allowed to specify the IDnr yourself. You always need to specify building, level and floor.</p>
+    <p>Only EXPERT users may specify the IDnr. But you always need to specify building, level and floor.</p>
 
     <div>
       <form method="POST" action="/assetname/import/new" enctype="multipart/form-data" style="max-width: 300px;margin-left: auto;margin-right: auto;border: 1px solid black;padding: 10px;">
@@ -154,7 +154,7 @@
 #proc genAssetSettingsTypes*(db: DbConn): string =
 # result = ""
 #
-# let assets = getAllRows(db, sql("SELECT id, name, description, strictidnr FROM asset_types;"))
+# let assets = getAllRows(db, sql("SELECT id, name, description, strictidnr FROM asset_types ORDER BY name;"))
 #
 <link rel="stylesheet" href="/css/assetname_private.css">
 <script src="/js/assetname_private.js" defer></script>
@@ -169,6 +169,10 @@
 
     <p>There's a total of ${assets.len} assets in your system. There may only be 1 of each type.</p>
 
+    <p>The column "Strict IDnr" defines, if there may only 1 of each running number - even though the asset is placed in different buildings.</p>
+
+    <hr>
+
     <div class="assetlist">
 
       <button id="newAsset" class="button is-info is-small" onclick="assetAdd();">Add new asset</button>
@@ -177,7 +181,7 @@
       <table class="table is-bordered is-hoverable assets">
         <thead>
           <tr>
-            <th class="id">ID</th>
+            <th class="id" style="width: 40px;">ID</th>
             <th>Name</th>
             <th>Description</th>
             <th>Strict IDnr</th>
@@ -273,7 +277,7 @@
 #proc genAssetSettingsTypesChoose*(db: DbConn, page: string): string =
 # result = ""
 #
-# let assets = getAllRows(db, sql("SELECT id, name, description FROM asset_types;"))
+# let assets = getAllRows(db, sql("SELECT id, name, description FROM asset_types ORDER BY name;"))
 #
 <link rel="stylesheet" href="/css/assetname_private.css">
 <script src="/js/assetname_private.js" defer></script>
@@ -293,9 +297,9 @@
       <table class="table is-bordered is-hoverable assets choose">
         <thead>
           <tr>
-            <td class="id">ID</td>
-            <td>Name</td>
-            <td>Description</td>
+            <th class="id" style="width: 40px;s">ID</th>
+            <th>Name</th>
+            <th>Description</th>
           </tr>
         </thead>
         <tbody>
@@ -323,9 +327,9 @@
 #proc genAssetSettingsOm*(db: DbConn, assetID: string): string =
 # result = ""
 #
-# let assets = getAllRows(db, sql("SELECT id, description, details, interval FROM asset_om WHERE type = ?;"), assetID)
+# let assets = getAllRows(db, sql("SELECT id, description, details, interval FROM asset_om WHERE type = ? ORDER BY interval;"), assetID)
 #
-# let assetData = getRow(db, sql("SELECT id, name, description FROM asset_types WHERE id = ?;"), assetID)
+# let assetData = getRow(db, sql("SELECT id, name, description FROM asset_types WHERE id = ?  ORDER BY name;"), assetID)
 #
 <link rel="stylesheet" href="/css/assetname_private.css">
 <script src="/js/assetname_private.js" defer></script>
@@ -350,7 +354,7 @@
       <table class="table is-bordered is-hoverable assets om">
         <thead>
           <tr>
-            <th class="id">ID</th>
+            <th class="id" style="width: 40px;">ID</th>
             <th>Description</th>
             <th style="max-width: 65px;">Interval<br>(per x month)</th>
             <th>Details</th>
@@ -434,9 +438,9 @@
 #proc genAssetSettingsDocumentation*(db: DbConn, assetID: string): string =
 # result = ""
 #
-# let assets = getAllRows(db, sql("SELECT id, responsecode, filetype, viewtype, designation, runningid, fileext, description FROM asset_documentation WHERE type = ?;"), assetID)
+# let assets = getAllRows(db, sql("SELECT id, responsecode, filetype, viewtype, designation, runningid, fileext, description FROM asset_documentation WHERE type = ? ORDER BY responsecode, filetype, viewtype, designation, runningid;"), assetID)
 #
-# let assetData = getRow(db, sql("SELECT id, name, description, subname FROM asset_types WHERE id = ?;"), assetID)
+# let assetData = getRow(db, sql("SELECT id, name, description, subname FROM asset_types WHERE id = ? ORDER BY name;"), assetID)
 #
 <link rel="stylesheet" href="/css/assetname_private.css">
 <script src="/js/assetname_private.js" defer></script>
@@ -461,7 +465,7 @@
       <table class="table is-bordered is-hoverable assets documentation">
         <thead>
           <tr>
-            <th class="id">ID</th>
+            <th class="id" style="width: 40px;">ID</th>
             <th>Ansvar</th>
             <th>Filtype</th>
             <th>Afbildning</th>

@@ -195,12 +195,19 @@
                 # if sactive == "":
                   <option value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
                   <option value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                  <option value="/assetname/data/show?active=Removed&${sortActive}"> Removed</option>
                 # elif sactive == "Reserved":
                   <option selected value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
                   <option value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                  <option value="/assetname/data/show?active=Removed&${sortActive}"> Removed</option>
+                # elif sactive == "Removed":
+                  <option value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
+                  <option value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                  <option selected value="/assetname/data/show?active=Removed&${sortActive}"> Removed</option>
                 # else:
                   <option value="/assetname/data/show?active=Reserved&${sortActive}"> Reserved</option>
                   <option selected value="/assetname/data/show?active=Used&${sortActive}"> Used</option>
+                  <option value="/assetname/data/show?active=Removed&${sortActive}"> Removed</option>
                 # end if
                 #
               </select>
@@ -322,6 +329,8 @@
             #   var color: string
             #   if asset[2] == "Reserved":
             #     color = "yellow"
+            #   elif asset[2] == "Removed":
+            #     color = "red"
             #   end if
               <tr id="${asset[0]}" class="editData ${color}">
                 <td class="id has-text-centered">${asset[0]}</td>
@@ -338,6 +347,8 @@
                 #end if
                 #if asset[2] == "Reserved":
                 <td class="has-text-centered active reserved">${asset[2]}</td>
+                #elif asset[2] == "Removed":
+                <td class="has-text-centered active removed">${asset[2]}</td>
                 #else:
                 <td class="has-text-centered active used">${asset[2]}</td>
                 #end if
@@ -428,6 +439,7 @@
                 <select id="active" name="active">
                   <option value="Reserved"> Reserved</option>
                   <option value="Used"> Used</option>
+                  <option value="Removed"> Removed</option>
                 </select>
               </div>
               <br>

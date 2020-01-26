@@ -5,7 +5,7 @@ import strutils, db_sqlite, xlsx, logging
 import assetData, assetTypes
 
 
-proc assetImportXlsx*(db: DbConn, userID: string, xlsxData: SheetTable, updateExisting=false): (bool, string) =
+proc assetImportXlsx*(db: DbConn, userID, userRank: string, xlsxData: SheetTable, updateExisting=false): (bool, string) =
   ## Imports or Updates asset from XLSX data
 
   let rows = xlsxData["Assets"].toSeq(false)
@@ -89,28 +89,28 @@ proc assetImportXlsx*(db: DbConn, userID: string, xlsxData: SheetTable, updateEx
 
       var idnrNext: string
 
-      #[
-      # NOT USED
-      if assetData.idnr != "" and not isDigit(assetData.idnr):
+
+      # WARNING
+      if assetData.idnr != "" and not isDigit(assetData.idnr) and userRank == "Admin":
         return (false, "A wrong IDnr was found!! A total of " & $counter & " was added. Remove the added rows and correct the IDnr in: " & $row)
 
-      # NOT USED
-      elif assetData.idnr != "":
+      # WARNING
+      elif assetData.idnr != "" and userRank == "Admin":
         if assetCheckDuplicatesAdd(db, assetData.assettypeid, assetData.building, assetData.level, assetData.idnr):
           return (false, "An duplicate was found!! A total of " & $counter & " was added. Remove the added rows and the duplicate and try again.")
 
-      elif:]#
-      let strictidnr = getValue(db, sql("SELECT strictidnr FROM asset_types WHERE id = ?;"), assetData.assettypeid)
+      else:
+        let strictidnr = getValue(db, sql("SELECT strictidnr FROM asset_types WHERE id = ?;"), assetData.assettypeid)
 
-      idnrNext = assetNextIdFind(db, assetData.assettypeid, assetData.building, assetData.level, strictidnr)
-      if idnrNext == "":
-        return (false, "Something went wrong when formatting the running number. A total of " & $counter & " was added. Remove the added rows and correct the IDnr in: " & $row)
+        idnrNext = assetNextIdFind(db, assetData.assettypeid, assetData.building, assetData.level, strictidnr)
+        if idnrNext == "":
+          return (false, "Something went wrong when formatting the running number. A total of " & $counter & " was added. Remove the added rows and correct the IDnr in: " & $row)
 
-      # Check for duplicates
-      if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), assetData.assettypeid, assetData.building, assetData.level, idnrNext) != "":
-        return (false, "A duplicate was found - contact the admin. A total of " & $counter & " was added. Remove the added rows and correct the IDnr in: " & $row)
+        # Check for duplicates
+        if getValue(db, sql("SELECT id FROM asset_data WHERE type = ? AND building = ? AND level = ? AND idnr = ?"), assetData.assettypeid, assetData.building, assetData.level, idnrNext) != "":
+          return (false, "A duplicate was found - contact the admin. A total of " & $counter & " was added. Remove the added rows and correct the IDnr in: " & $row)
 
-      if assetData.active == "" or assetData.active notin ["Used", "Reserved"]:
+      if assetData.active == "" or assetData.active notin ["Used", "Reserved", "Removed"]:
         assetData.active = "Reserved"
 
       assetAdd(db, assetData.active, assetData.assettypeid, assetData.typesubname, assetData.building, assetData.level, idnrNext, assetData.room, assetData.coordinates, assetData.description, assetData.supplier, assetData.oldtag, assetData.reqname, assetData.reqemail, assetData.reqcompany, userID, assetData.project, assetData.projectid)
